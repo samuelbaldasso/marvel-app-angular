@@ -80,7 +80,7 @@ export class CharacterListComponent implements OnInit {
   ngOnInit(): void {
       // Initialize search term from state
   this.searchTerm = this.characterState.filter().nameStartsWith || '';
-  
+
     // Load locally stored characters on component initialization
     this.loadLocalCharacters();
   }

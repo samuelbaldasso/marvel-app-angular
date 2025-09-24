@@ -2,7 +2,7 @@ import { Injectable, computed, effect, signal, OnDestroy, inject } from '@angula
 import { Character, CharacterFilter, PaginationInfo } from '../models/character.model';
 import { MarvelApiService } from './marvel-api.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Subject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { LocalStorageService } from './local-storage.service';
 
@@ -10,8 +10,16 @@ import { LocalStorageService } from './local-storage.service';
   providedIn: 'root'
 })
 export class CharacterState implements OnDestroy {
+  // Crie um BehaviorSubject para gerenciar o estado dos personagens
+  private charactersSubject = new BehaviorSubject<Character[]>([]);
+
+  private localStorageService = inject(LocalStorageService);
+  // Exponha o Observable para componentes externos observarem
+  public characters$ = this.charactersSubject.asObservable();
+
+  public selectedCharacter$ = new BehaviorSubject<Character | null>(null);
+
   private destroy$ = new Subject<void>();
-  private storageService = inject(LocalStorageService);
 
   // Flag to prevent automatic reload when navigating back
   private skipNextAutoLoad = false;
@@ -606,4 +614,20 @@ clearSearchFilter(): void {
   this.loadCharacters();
 }
 
+ // Método para buscar personagens com um termo de pesquisa
+  searchCharacters(term: string): void {
+    // Por exemplo, usando o serviço da API com o termo de pesquisa
+    this.marvelService.getCharacters(20, 0, term).subscribe(apiResponse => {
+      const apiCharacters = apiResponse.results.filter(char =>
+        !this.localStorageService.isCharacterDeleted(char.id)
+      );
+
+      // Buscar personagens locais que correspondam ao termo
+      const localCharacters = this.localStorageService.getLocalCharacters()
+        .filter(char => char.name.toLowerCase().includes(term.toLowerCase()));
+
+      // Combine os resultados e atualize o estado
+      this.charactersSubject.next([...apiCharacters, ...localCharacters]);
+    });
+  }
 }
