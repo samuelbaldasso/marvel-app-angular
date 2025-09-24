@@ -1,0 +1,43 @@
+<h2 mat-dialog-title>{{ dialogTitle }}</h2>
+
+<form [formGroup]="characterForm" (ngSubmit)="onSubmit()">
+  <mat-dialog-content>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Name</mat-label>
+      <input matInput formControlName="name" placeholder="Character name" required>
+      <mat-error *ngIf="characterForm.get('name')?.hasError('required')">
+        Name is required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Description</mat-label>
+      <textarea
+        matInput
+        formControlName="description"
+        placeholder="Character description"
+        rows="5">
+      </textarea>
+    </mat-form-field>
+
+    <div formGroupName="thumbnail" class="thumbnail-section">
+      <h3>Thumbnail</h3>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Image Path</mat-label>
+        <input matInput formControlName="path" placeholder="Image path URL">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Extension</mat-label>
+        <input matInput formControlName="extension" placeholder="jpg, png, etc">
+      </mat-form-field>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" (click)="onCancel()">Cancel</button>
+    <button mat-raised-button color="primary" type="submit" [disabled]="!characterForm.valid">
+      {{ data.mode === 'create' ? 'Create' : 'Update' }}
+    </button>
+  </mat-dialog-actions>
+</form>

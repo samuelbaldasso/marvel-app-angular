@@ -40,3 +40,10 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+./*.log
+.env
+.env.local
+./environments/*.ts
+/src/environments/env.ts
+/src/environments/env.prod.ts
+/src/environments/env.test.ts

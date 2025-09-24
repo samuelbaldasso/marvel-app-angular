@@ -22,6 +22,9 @@ A modern Angular application for exploring and managing Marvel characters. Built
 - **Angular CLI**: Command line interface for Angular
 - **Marvel API**: For fetching character data
 - **Angular Signals**: For state management and reactivity
+- **Angular Forms**: For handling user input and form validation
+- **Angular Router**: For navigation and routing
+- **Local Storage**: For persisting custom character data
 
 ## Project Structure
 

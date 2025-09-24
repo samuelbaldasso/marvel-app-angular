@@ -1,0 +1,120 @@
+.character-detail-container {
+  padding: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  .loading-container,
+  .error-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 300px;
+
+    mat-icon {
+      font-size: 48px;
+      height: 48px;
+      width: 48px;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      margin-bottom: 1rem;
+      color: rgba(0, 0, 0, 0.6);
+    }
+
+    button {
+      margin: 0 0.5rem;
+    }
+  }
+
+  .error-container mat-icon {
+    color: #f44336;
+  }
+
+  .character-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2rem;
+
+    h1 {
+      flex-grow: 1;
+      margin: 0 1rem;
+      font-size: 2rem;
+      font-weight: 500;
+    }
+
+    .action-buttons {
+      button {
+        margin-left: 0.5rem;
+      }
+    }
+  }
+
+  .character-main {
+    display: flex;
+    margin-bottom: 2rem;
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+    }
+
+    .character-image {
+      flex: 0 0 300px;
+      margin-right: 2rem;
+
+      img {
+        width: 100%;
+        border-radius: 4px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      @media (max-width: 768px) {
+        margin-bottom: 1.5rem;
+        margin-right: 0;
+      }
+    }
+
+    .character-info {
+      flex-grow: 1;
+
+      h2 {
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: rgba(0, 0, 0, 0.87);
+      }
+
+      p {
+        margin-bottom: 1.5rem;
+        color: rgba(0, 0, 0, 0.6);
+        line-height: 1.6;
+      }
+    }
+  }
+
+  mat-tab-group {
+    margin-bottom: 2rem;
+
+    .tab-content {
+      padding: 1rem 0;
+
+      .no-data {
+        padding: 1rem;
+        color: rgba(0, 0, 0, 0.6);
+        font-style: italic;
+      }
+    }
+
+    .story-type {
+      margin-left: 0.5rem;
+      color: rgba(0, 0, 0, 0.6);
+      font-style: italic;
+    }
+  }
+
+  .no-data {
+    color: rgba(0, 0, 0, 0.6);
+    font-style: italic;
+  }
+}

@@ -1,0 +1,66 @@
+<!-- src/app/features/characters/pages/character-list/character-list.component.html -->
+<div class="characters-container">
+  <div class="header">
+    <h1>Marvel Characters</h1>
+
+    <!-- Search box -->
+    <mat-form-field appearance="outline">
+      <mat-label>Search Characters</mat-label>
+      <input
+        matInput
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="onSearchChange()"
+        placeholder="Enter character name">
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <!-- Create button -->
+    <button mat-raised-button color="primary" (click)="openCreateCharacterDialog()">
+      <mat-icon>add</mat-icon>
+      Create Character
+    </button>
+  </div>
+
+  <!-- Loading state -->
+  <div class="loading-container" *ngIf="loading()">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Loading characters...</p>
+  </div>
+
+  <!-- Error state -->
+  <div class="error-container" *ngIf="error()">
+    <mat-icon color="warn">error</mat-icon>
+    <p>{{ error() }}</p>
+    <button mat-button color="primary" (click)="reloadCharacters()">
+      Retry
+    </button>
+  </div>
+
+  <!-- Empty state -->
+  <div class="empty-container" *ngIf="isEmpty() && !loading() && !error()">
+    <mat-icon>sentiment_dissatisfied</mat-icon>
+    <p>No characters found</p>
+    <button mat-button color="primary" (click)="searchTerm = ''; onSearchChange()">
+      Clear Search
+    </button>
+  </div>
+
+  <!-- Character list -->
+  <div class="characters-grid" *ngIf="!isEmpty() && !loading()">
+    <app-character-card
+      *ngFor="let character of characters()"
+      [character]="character"
+      (click)="viewCharacterDetails(character)"
+      (deleteRequest)="deleteCharacter(character, $event)">
+    </app-character-card>
+  </div>
+
+  <!-- Pagination -->
+  <mat-paginator
+    *ngIf="pagination().total > 0"
+    [length]="pagination().total"
+    [pageSize]="pagination().limit"
+    [pageIndex]="currentPage() - 1"
+    (page)="onPageChange($event)">
+  </mat-paginator>
+</div>

@@ -1,0 +1,114 @@
+<div class="character-detail-container">
+  <!-- Loading state -->
+  <div class="loading-container" *ngIf="loading()">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Loading character details...</p>
+  </div>
+
+  <!-- Error state -->
+  <div class="error-container" *ngIf="error()">
+    <mat-icon color="warn">error</mat-icon>
+    <p>{{ error() }}</p>
+    <button mat-button color="primary" (click)="reloadCharacter()">
+      Retry
+    </button>
+    <button mat-button (click)="navigateToList()">
+      Back to List
+    </button>
+  </div>
+
+  <!-- Character details -->
+  <div class="character-content" *ngIf="character() && !loading()">
+    <div class="character-header">
+      <button mat-icon-button aria-label="Back" (click)="navigateToList()">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+
+      <h1>{{ character()?.name }}</h1>
+
+      <div class="action-buttons">
+        <button mat-raised-button color="primary" (click)="editCharacter()">
+          <mat-icon>edit</mat-icon>
+          Edit
+        </button>
+        <button mat-raised-button color="warn" (click)="deleteCharacter()">
+          <mat-icon>delete</mat-icon>
+          Delete
+        </button>
+      </div>
+    </div>
+
+    <div class="character-main">
+      <div class="character-image">
+        <img [src]="getThumbnailUrl()" [alt]="character()?.name">
+      </div>
+
+      <div class="character-info">
+        <h2>About</h2>
+        <p *ngIf="character()?.description">{{ character()?.description }}</p>
+        <p *ngIf="!character()?.description" class="no-data">No description available</p>
+
+        <h2>Last Modified</h2>
+        <p>{{ character()?.modified | date:'medium' }}</p>
+      </div>
+    </div>
+
+    <mat-tab-group>
+      <mat-tab label="Comics ({{ character()?.comics?.available || 0 }})">
+        <div class="tab-content">
+          <mat-list *ngIf="character()?.comics?.items?.length">
+            <mat-list-item *ngFor="let comic of character()?.comics?.items">
+              {{ comic.name }}
+            </mat-list-item>
+          </mat-list>
+          <p *ngIf="!character()?.comics?.items?.length" class="no-data">No comics available</p>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Series ({{ character()?.series?.available || 0 }})">
+        <div class="tab-content">
+          <mat-list *ngIf="character()?.series?.items?.length">
+            <mat-list-item *ngFor="let series of character()?.series?.items">
+              {{ series.name }}
+            </mat-list-item>
+          </mat-list>
+          <p *ngIf="!character()?.series?.items?.length" class="no-data">No series available</p>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Stories ({{ character()?.stories?.available || 0 }})">
+        <div class="tab-content">
+          <mat-list *ngIf="character()?.stories?.items?.length">
+            <mat-list-item *ngFor="let story of character()?.stories?.items">
+              {{ story.name }}
+              <span class="story-type" *ngIf="story.type">({{ story.type }})</span>
+            </mat-list-item>
+          </mat-list>
+          <p *ngIf="!character()?.stories?.items?.length" class="no-data">No stories available</p>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Events ({{ character()?.events?.available || 0 }})">
+        <div class="tab-content">
+          <mat-list *ngIf="character()?.events?.items?.length">
+            <mat-list-item *ngFor="let event of character()?.events?.items">
+              {{ event.name }}
+            </mat-list-item>
+          </mat-list>
+          <p *ngIf="!character()?.events?.items?.length" class="no-data">No events available</p>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Links">
+        <div class="tab-content">
+          <mat-list *ngIf="character()?.urls?.length">
+            <mat-list-item *ngFor="let link of character()?.urls">
+              <a [href]="link.url" target="_blank">{{ link.type | titlecase }}</a>
+            </mat-list-item>
+          </mat-list>
+          <p *ngIf="!character()?.urls?.length" class="no-data">No links available</p>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+</div>
