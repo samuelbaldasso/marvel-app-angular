@@ -18,7 +18,7 @@ A modern Angular application for exploring and managing Marvel characters. Built
 - **RxJS**: Reactive programming library for handling asynchronous operations
 - **TypeScript**: Strongly typed programming language
 - **CSS/SCSS**: For styling components
-- **Jest**: For unit testing
+- **Jasmine / Karma**: For unit testing
 - **Angular CLI**: Command line interface for Angular
 - **Marvel API**: For fetching character data
 - **Angular Signals**: For state management and reactivity
