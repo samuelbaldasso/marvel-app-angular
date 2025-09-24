@@ -126,7 +126,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Acknowledgments
 
-- [Marvel API](https://developer.marvel.com/) for providing character data
+- [Marvel API](https://developer.marvel.com/) for providing character data. You should set an environment variable with your own API key from this link
 - [Angular](https://angular.io/) for the awesome framework
 - [Material Design](https://material.io/) for the UI components
 

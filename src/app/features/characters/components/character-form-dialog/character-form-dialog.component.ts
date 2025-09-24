@@ -51,11 +51,6 @@ export class CharacterFormDialogComponent implements OnInit {
         extension: [this.data.character?.thumbnail?.extension || 'jpg']
       })
     });
-
-    // If we're creating a new character, these fields aren't editable
-    if (this.data.mode === 'edit') {
-      // Add more fields specific to edit mode if needed
-    }
   }
 
   onCancel(): void {
