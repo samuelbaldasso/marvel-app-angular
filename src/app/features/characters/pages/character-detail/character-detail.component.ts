@@ -72,40 +72,52 @@ export class CharacterDetailComponent implements OnInit {
     this.characterState.loadCharacter(id);
   }
 
-  /**
-   * Navigate back to character list
-   */
-  navigateToList(): void {
-    this.router.navigate(['/characters']);
+navigateToList(): void {
+  this.characterState.skipNextLoad();
+
+  // Try to restore previous search state
+  const restored = this.characterState.restoreSearchState();
+
+  // If no state was restored, clear filters
+  if (!restored) {
+    this.characterState.clearSearchFilter();
   }
 
-  /**
-   * Open dialog to edit character
-   */
-  editCharacter(): void {
-    const currentCharacter = this.character();
+  this.router.navigate(['/characters']);
+}
 
-    if (!currentCharacter) {
-      return;
+  /**
+ * Open dialog to edit character
+ */
+editCharacter(): void {
+  const currentCharacter = this.character();
+
+  if (!currentCharacter) {
+    return;
+  }
+
+  const dialogRef = this.dialog.open(CharacterFormDialogComponent, {
+    width: '600px',
+     data: {
+      mode: 'edit',
+      character: currentCharacter
     }
+  });
 
-    const dialogRef = this.dialog.open(CharacterFormDialogComponent, {
-      width: '600px',
-      data: { // This was the issue - '' was missing
-        mode: 'edit',
-        character: currentCharacter
-      }
-    });
+  dialogRef.afterClosed().subscribe(result => {
+    if (result) {
+      // Make sure to preserve the source
+      result.source = currentCharacter.source;
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.characterState.updateCharacter(result);
-        this.snackBar.open('Character updated successfully!', 'Close', {
-          duration: 3000
-        });
-      }
-    });
-  }
+      // Update character in state
+      this.characterState.updateCharacter(result);
+
+      this.snackBar.open('Character updated successfully!', 'Close', {
+        duration: 3000
+      });
+    }
+  });
+}
 
   /**
    * Open dialog to create new character

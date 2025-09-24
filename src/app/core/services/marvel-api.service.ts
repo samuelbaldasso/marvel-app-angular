@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable, map, of } from 'rxjs';
 import { Character } from '../models/character.model';
 import md5 from 'crypto-js/md5';
 import { environment } from '../../../environments/env';
@@ -38,18 +38,31 @@ export class MarvelApiService {
     return this.http.get<any>(`${this.apiUrl}/characters`, { params })
       .pipe(
         map(response => ({
-          results: response.data.results,
+          results: response.data.results.map((char: any) => ({
+            ...char,
+            source: 'api' as const  // Mark API characters explicitly
+          })),
           total: response.data.total
         }))
       );
   }
 
   getCharacterById(id: number): Observable<Character> {
+    // First check local storage for this character
+    const localChar = this.getCharacterFromLocalStorage(id);
+    if (localChar) {
+      return of(localChar); // Return the local character if found
+    }
+
+    // Otherwise get from API
     const params = this.getBaseParams();
 
     return this.http.get<any>(`${this.apiUrl}/characters/${id}`, { params })
       .pipe(
-        map(response => response.data.results[0])
+        map(response => ({
+          ...response.data.results[0],
+          source: 'api' as const  // Mark API character
+        }))
       );
   }
 
@@ -77,9 +90,13 @@ export class MarvelApiService {
       setTimeout(() => {
         const newCharacter = {
           ...character,
-          id: Math.floor(Math.random() * 1000000), // Generate fake ID
-          modified: new Date().toISOString()
+          id: Date.now(), // Use timestamp as ID for better uniqueness
+          modified: new Date().toISOString(),
+          source: 'local' as const // Mark as local character
         } as Character;
+
+        // Save to local storage immediately
+        this.saveCharacterToLocalStorage(newCharacter);
 
         observer.next(newCharacter);
         observer.complete();
@@ -99,6 +116,11 @@ export class MarvelApiService {
           modified: new Date().toISOString()
         };
 
+        // If it's a local character, update in storage
+        if (character.source === 'local') {
+          this.saveCharacterToLocalStorage(updatedCharacter);
+        }
+
         observer.next(updatedCharacter);
         observer.complete();
       }, 800); // Simulate network delay
@@ -109,6 +131,17 @@ export class MarvelApiService {
    * Simulates deleting a character
    */
   deleteCharacter(id: number): Observable<boolean> {
+    // Check if it's a local character
+    const localCharacter = this.getCharacterFromLocalStorage(id);
+
+    if (localCharacter) {
+      // Delete from local storage
+      this.removeCharacterFromLocalStorage(id);
+    } else {
+      // Mark API character as deleted for future filtering
+      this.markCharacterAsDeleted(id);
+    }
+
     // Simulate API call
     return new Observable(observer => {
       setTimeout(() => {
@@ -126,5 +159,70 @@ export class MarvelApiService {
       .set('apikey', this.apiKey!)
       .set('ts', this.ts)
       .set('hash', this.hash);
+  }
+
+  // Local storage helper methods
+  private getCharacterFromLocalStorage(id: number): Character | null {
+    const STORAGE_KEY = 'marvel_custom_characters';
+    try {
+      const storedCharacters = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]') as Character[];
+      return storedCharacters.find(char => char.id === id) || null;
+    } catch (e) {
+      console.error('Error retrieving character from local storage', e);
+      return null;
+    }
+  }
+
+  private saveCharacterToLocalStorage(character: Character): void {
+    const STORAGE_KEY = 'marvel_custom_characters';
+    try {
+      // Get existing characters
+      const storedCharactersString = localStorage.getItem(STORAGE_KEY) || '[]';
+      const storedCharacters = JSON.parse(storedCharactersString) as Character[];
+
+      // Update or add
+      const existingIndex = storedCharacters.findIndex(c => c.id === character.id);
+      if (existingIndex >= 0) {
+        storedCharacters[existingIndex] = character;
+      } else {
+        storedCharacters.push(character);
+      }
+
+      // Save back
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(storedCharacters));
+    } catch (e) {
+      console.error('Error saving character to local storage', e);
+    }
+  }
+
+  private removeCharacterFromLocalStorage(id: number): void {
+    const STORAGE_KEY = 'marvel_custom_characters';
+    try {
+      const storedCharactersString = localStorage.getItem(STORAGE_KEY) || '[]';
+      let storedCharacters = JSON.parse(storedCharactersString) as Character[];
+
+      // Filter out the character
+      storedCharacters = storedCharacters.filter(c => c.id !== id);
+
+      // Save back
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(storedCharacters));
+    } catch (e) {
+      console.error('Error removing character from local storage', e);
+    }
+  }
+
+  private markCharacterAsDeleted(id: number): void {
+    const DELETED_KEY = 'marvel_deleted_characters';
+    try {
+      const deletedIdsString = localStorage.getItem(DELETED_KEY) || '[]';
+      const deletedIds = JSON.parse(deletedIdsString) as number[];
+
+      if (!deletedIds.includes(id)) {
+        deletedIds.push(id);
+        localStorage.setItem(DELETED_KEY, JSON.stringify(deletedIds));
+      }
+    } catch (e) {
+      console.error('Error marking character as deleted', e);
+    }
   }
 }

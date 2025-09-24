@@ -78,6 +78,9 @@ export class CharacterListComponent implements OnInit {
   }
 
   ngOnInit(): void {
+      // Initialize search term from state
+  this.searchTerm = this.characterState.filter().nameStartsWith || '';
+  
     // Load locally stored characters on component initialization
     this.loadLocalCharacters();
   }
@@ -101,6 +104,15 @@ export class CharacterListComponent implements OnInit {
         });
     }
   }
+
+  /**
+ * Clear search term and show all characters
+ */
+clearSearch(): void {
+  this.searchTerm = '';
+  this.characterState.clearSearchFilter();
+}
+
 
   /**
    * Save characters to local storage
@@ -159,10 +171,13 @@ export class CharacterListComponent implements OnInit {
     this.router.navigate(['/characters']);
   }
 
-  // Character selection handler
-  viewCharacterDetails(character: Character): void {
-    this.router.navigate(['/characters', character.id]);
-  }
+// Character selection handler
+viewCharacterDetails(character: Character): void {
+  // Save current search state before navigating
+  this.characterState.saveSearchState();
+  this.router.navigate(['/characters', character.id]);
+}
+
 
   // Create new character
   createNewCharacter(): void {

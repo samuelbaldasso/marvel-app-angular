@@ -63,25 +63,37 @@ export class CharacterFormDialogComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.characterForm.valid) {
-      const characterData = this.characterForm.value;
+  if (this.characterForm.valid) {
+    const formValues = this.characterForm.value;
 
-      // If editing, include the ID
-      if (this.data.mode === 'edit' && this.data.character) {
-        characterData.id = this.data.character.id;
-        characterData.modified = new Date().toISOString();
-      }
+    // Create character object to return
+    const characterData: any = {
+      ...this.data.character, // Preserve all existing properties
+      name: formValues.name,
+      description: formValues.description,
+      thumbnail: formValues.thumbnail,
+      // Add any other form fields
+    };
 
-      // Add default properties for a new character
-      if (this.data.mode === 'create') {
-        characterData.comics = { available: 0, items: [], returned: 0, collectionURI: '' };
-        characterData.series = { available: 0, items: [], returned: 0, collectionURI: '' };
-        characterData.stories = { available: 0, items: [], returned: 0, collectionURI: '' };
-        characterData.events = { available: 0, items: [], returned: 0, collectionURI: '' };
-        characterData.urls = [];
-      }
-
-      this.dialogRef.close(characterData);
+    // If editing, ensure ID is included
+    if (this.data.mode === 'edit' && this.data.character) {
+      characterData.id = this.data.character.id;
+      characterData.modified = new Date().toISOString();
+      // Preserve the source
+      characterData.source = this.data.character.source;
     }
+
+    // Add default properties for a new character
+    if (this.data.mode === 'create') {
+      characterData.comics = { available: 0, items: [], returned: 0, collectionURI: '' };
+      characterData.series = { available: 0, items: [], returned: 0, collectionURI: '' };
+      characterData.stories = { available: 0, items: [], returned: 0, collectionURI: '' };
+      characterData.events = { available: 0, items: [], returned: 0, collectionURI: '' };
+      characterData.urls = [];
+      characterData.source = 'local';
+    }
+
+    this.dialogRef.close(characterData);
   }
+}
 }

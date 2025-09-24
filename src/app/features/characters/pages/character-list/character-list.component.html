@@ -1,7 +1,7 @@
 <!-- src/app/features/characters/pages/character-list/character-list.component.html -->
 <div class="characters-container">
   <div class="header">
-    <h1>Marvel Characters</h1>
+    <h1 (click)="navigateToList()">Marvel Characters</h1>
 
     <!-- Search box -->
     <mat-form-field appearance="outline">
@@ -11,6 +11,14 @@
         [(ngModel)]="searchTerm"
         (ngModelChange)="onSearchChange()"
         placeholder="Enter character name">
+        <button
+    *ngIf="searchTerm"
+    mat-icon-button
+    matSuffix
+    (click)="clearSearch()"
+    aria-label="Clear">
+    <mat-icon>close</mat-icon>
+  </button>
       <mat-icon matSuffix>search</mat-icon>
     </mat-form-field>
 
