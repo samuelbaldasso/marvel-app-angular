@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, map, of } from 'rxjs';
+import { Observable, map, of, throwError, delay } from 'rxjs';
 import { Character } from '../models/character.model';
 import md5 from 'crypto-js/md5';
 import { environment } from '../../../environments/env';
@@ -76,56 +76,96 @@ export class MarvelApiService {
       );
   }
 
-  /**
-   * The following methods simulate CRUD operations that aren't supported by the Marvel API
-   * In a real application with a writable API, these would actually perform HTTP requests
-   */
+  createCharacter(character: Partial<Character>): Observable<Character> {
+    const STORAGE_KEY = 'marvel_custom_characters';
+    try {
+      // Get existing characters
+      const storedCharactersString = localStorage.getItem(STORAGE_KEY) || '[]';
+      const storedCharacters = JSON.parse(storedCharactersString) as Character[];
 
-  /**
-   * Simulates creating a new character
-   */
-  createCharacter(character: Omit<Character, 'id'>): Observable<Character> {
-    // Simulate API call with a local response
-    return new Observable(observer => {
-      setTimeout(() => {
-        const newCharacter = {
-          ...character,
-          id: Date.now(), // Use timestamp as ID for better uniqueness
-          modified: new Date().toISOString(),
-          source: 'local' as const // Mark as local character
-        } as Character;
+      // Generate a unique ID (negative to avoid conflicts with API IDs)
+      const nextId = this.generateUniqueLocalId(storedCharacters);
 
-        // Save to local storage immediately
-        this.saveCharacterToLocalStorage(newCharacter);
+      // Create new character
+      const newCharacter: Character = {
+        ...(character as any),
+        id: nextId,
+        source: 'local'
+      };
 
-        observer.next(newCharacter);
-        observer.complete();
-      }, 800); // Simulate network delay
-    });
+      // Add to storage
+      storedCharacters.push(newCharacter);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(storedCharacters));
+
+      return of(newCharacter);
+    } catch (e) {
+      return throwError(() => e);
+    }
   }
 
-  /**
-   * Simulates updating a character
-   */
+  private generateUniqueLocalId(existingCharacters: Character[]): number {
+  // Find the lowest (most negative) ID currently in use
+  const lowestId = existingCharacters.reduce(
+    (lowest, char) => (char.id < lowest && char.id < 0) ? char.id : lowest,
+    -1
+  );
+  // Return one less (more negative) to ensure uniqueness
+  return lowestId - 1;
+}
+
   updateCharacter(character: Character): Observable<Character> {
-    // Simulate API call with a local response
-    return new Observable(observer => {
-      setTimeout(() => {
-        const updatedCharacter = {
-          ...character,
-          modified: new Date().toISOString()
-        };
+    console.log('Service: updating character with ID:', character.id, character);
 
-        // If it's a local character, update in storage
-        if (character.source === 'local') {
-          this.saveCharacterToLocalStorage(updatedCharacter);
-        }
+    // For local characters
+    if (character.source === 'local' || this.isLocalCharacterId(character.id)) {
+      return this.updateLocalCharacter(character);
+    }
 
-        observer.next(updatedCharacter);
-        observer.complete();
-      }, 800); // Simulate network delay
-    });
+    // For API characters (simulated update)
+    return of(character);
   }
+
+  private updateLocalCharacter(character: Character): Observable<Character> {
+    const STORAGE_KEY = 'marvel_custom_characters';
+    try {
+      // Get existing characters
+      const storedCharactersString = localStorage.getItem(STORAGE_KEY) || '[]';
+      const storedCharacters = JSON.parse(storedCharactersString) as Character[];
+
+      // Check if character exists
+      const index = storedCharacters.findIndex(c => c.id === character.id);
+
+      if (index >= 0) {
+        // Update existing character - preserve source property
+        storedCharacters[index] = {
+          ...character,
+          source: storedCharacters[index].source // Ensure source remains consistent
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(storedCharacters));
+        return of(storedCharacters[index]).pipe(delay(100)); // Return the updated character
+      }
+
+      // Character not found, create a new entry
+    const newCharacter = {
+      ...character,
+      source: 'local',
+      modified: new Date().toISOString()
+    } as Character;
+
+    storedCharacters.push(newCharacter);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(storedCharacters));
+    return of(newCharacter).pipe(delay(100));
+    
+  } catch (e) {
+      console.error('Error updating local character:', e);
+      return throwError(() => e);
+    }
+  }
+
+// Simplified check - local characters have negative IDs
+private isLocalCharacterId(id: number): boolean {
+    return id < 0;
+}
 
   /**
    * Simulates deleting a character
@@ -225,4 +265,5 @@ export class MarvelApiService {
       console.error('Error marking character as deleted', e);
     }
   }
+
 }

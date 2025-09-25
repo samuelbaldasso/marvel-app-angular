@@ -90,47 +90,47 @@ export class CharacterState implements OnDestroy {
   }
 
   // Search state persistence
-private readonly SEARCH_STATE_KEY = 'marvel_search_state';
+  private readonly SEARCH_STATE_KEY = 'marvel_search_state';
 
-/**
- * Save current search state to session storage
- */
-saveSearchState(): void {
-  const currentFilter = this.filterSignal();
-  sessionStorage.setItem(this.SEARCH_STATE_KEY, JSON.stringify({
-    nameStartsWith: currentFilter.nameStartsWith,
-    offset: currentFilter.offset,
-    limit: currentFilter.limit
-  }));
-}
-
-/**
- * Restore search state from session storage
- */
-restoreSearchState(): boolean {
-  const savedState = sessionStorage.getItem(this.SEARCH_STATE_KEY);
-  if (savedState) {
-    try {
-      const parsedState = JSON.parse(savedState);
-      this.filterSignal.set({
-        nameStartsWith: parsedState.nameStartsWith || '',
-        offset: parsedState.offset || 0,
-        limit: parsedState.limit || 20
-      });
-      return true;
-    } catch (e) {
-      console.error('Error restoring search state', e);
-    }
+  /**
+   * Save current search state to session storage
+   */
+  saveSearchState(): void {
+    const currentFilter = this.filterSignal();
+    sessionStorage.setItem(this.SEARCH_STATE_KEY, JSON.stringify({
+      nameStartsWith: currentFilter.nameStartsWith,
+      offset: currentFilter.offset,
+      limit: currentFilter.limit
+    }));
   }
-  return false;
-}
 
-/**
- * Clear saved search state
- */
-clearSavedSearchState(): void {
-  sessionStorage.removeItem(this.SEARCH_STATE_KEY);
-}
+  /**
+   * Restore search state from session storage
+   */
+  restoreSearchState(): boolean {
+    const savedState = sessionStorage.getItem(this.SEARCH_STATE_KEY);
+    if (savedState) {
+      try {
+        const parsedState = JSON.parse(savedState);
+        this.filterSignal.set({
+          nameStartsWith: parsedState.nameStartsWith || '',
+          offset: parsedState.offset || 0,
+          limit: parsedState.limit || 20
+        });
+        return true;
+      } catch (e) {
+        console.error('Error restoring search state', e);
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Clear saved search state
+   */
+  clearSavedSearchState(): void {
+    sessionStorage.removeItem(this.SEARCH_STATE_KEY);
+  }
 
   /**
    * Load both local and API characters on first load
@@ -148,19 +148,19 @@ clearSavedSearchState(): void {
     this.loadCharacters();
   }
 
-  /**
-   * Get local characters from storage
-   */
   private getLocalCharacters(): Character[] {
     const STORAGE_KEY = 'marvel_custom_characters';
     try {
-      const storedCharacters = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]') as Character[];
+      const storedCharactersString = localStorage.getItem(STORAGE_KEY);
+      if (!storedCharactersString) return [];
+
+      const storedCharacters = JSON.parse(storedCharactersString) as Character[];
       return storedCharacters.map(char => ({
         ...char,
         source: 'local' as const
       }));
     } catch (e) {
-      console.error('Error loading local characters', e);
+      console.error('Error getting local characters', e);
       return [];
     }
   }
@@ -412,23 +412,25 @@ clearSavedSearchState(): void {
       });
   }
 
-  /**
- * Update an existing character (simulated)
- */
-updateCharacter(character: Character): void {
+  updateCharacter(character: Character): void {
   this.loadingSignal.set(true);
   this.errorSignal.set(null);
 
-  // Ensure the character has a source property
+  // Make sure we preserve the ID and source
   const characterToUpdate = {
     ...character,
-    source: character.source ||
-            (this.isLocalCharacterId(character.id) ? 'local' as const : 'api' as const)
+    source: character.source || 
+      (this.isLocalCharacterId(character.id) ? 'local' : 'api')
   };
+
+  // Log for debugging
+  console.log('Updating character:', characterToUpdate);
 
   this.marvelService.updateCharacter(characterToUpdate)
     .subscribe({
       next: (updatedCharacter) => {
+        console.log('Character updated:', updatedCharacter);
+        
         // Update in the list - ensure consistent update
         this.charactersSignal.update(characters => {
           return characters.map(c => {
@@ -436,7 +438,7 @@ updateCharacter(character: Character): void {
               // Preserve source information when updating
               return {
                 ...updatedCharacter,
-                source: c.source || updatedCharacter.source
+                source: characterToUpdate.source
               };
             }
             return c;
@@ -445,12 +447,10 @@ updateCharacter(character: Character): void {
 
         // Update selected character if it's the one being edited
         if (this.selectedCharacterSignal()?.id === updatedCharacter.id) {
-          this.selectedCharacterSignal.set(updatedCharacter);
-        }
-
-        // For local characters, make sure to update in localStorage
-        if (characterToUpdate.source === 'local') {
-          this.saveToLocalStorage(updatedCharacter);
+          this.selectedCharacterSignal.set({
+            ...updatedCharacter,
+            source: characterToUpdate.source
+          });
         }
 
         this.loadingSignal.set(false);
@@ -463,50 +463,50 @@ updateCharacter(character: Character): void {
     });
 }
 
-/**
- * Check if a character ID belongs to a local character
- */
-private isLocalCharacterId(id: number): boolean {
-  const STORAGE_KEY = 'marvel_custom_characters';
-  try {
-    const storedCharacters = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]') as Character[];
-    return storedCharacters.some(char => char.id === id);
-  } catch (e) {
-    console.error('Error checking local character', e);
-    return false;
-  }
-}
+  private isLocalCharacterId(id: number): boolean {
+    const STORAGE_KEY = 'marvel_custom_characters';
+    try {
+      const storedCharactersString = localStorage.getItem(STORAGE_KEY);
+      if (!storedCharactersString) return false;
 
-/**
- * Save a character to local storage
- */
-private saveToLocalStorage(character: Character): void {
-  const STORAGE_KEY = 'marvel_custom_characters';
-  try {
-    // Get existing characters
-    const storedCharactersString = localStorage.getItem(STORAGE_KEY) || '[]';
-    const storedCharacters = JSON.parse(storedCharactersString) as Character[];
-
-    // Update or add the character
-    const index = storedCharacters.findIndex(c => c.id === character.id);
-    if (index >= 0) {
-      storedCharacters[index] = {
-        ...character,
-        source: 'local' as const  // Always ensure source is set
-      };
-    } else {
-      storedCharacters.push({
-        ...character,
-        source: 'local' as const
-      });
+      const storedCharacters = JSON.parse(storedCharactersString) as Character[];
+      return storedCharacters.some(char => char.id === id);
+    } catch (e) {
+      console.error('Error checking local character', e);
+      return false;
     }
-
-    // Save back to storage
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(storedCharacters));
-  } catch (e) {
-    console.error('Error saving to localStorage', e);
   }
-}
+
+  /**
+   * Save a character to local storage
+   */
+  private saveToLocalStorage(character: Character): void {
+    const STORAGE_KEY = 'marvel_custom_characters';
+    try {
+      // Get existing characters
+      const storedCharactersString = localStorage.getItem(STORAGE_KEY) || '[]';
+      const storedCharacters = JSON.parse(storedCharactersString) as Character[];
+
+      // Update or add the character
+      const index = storedCharacters.findIndex(c => c.id === character.id);
+      if (index >= 0) {
+        storedCharacters[index] = {
+          ...character,
+          source: 'local' as const  // Always ensure source is set
+        };
+      } else {
+        storedCharacters.push({
+          ...character,
+          source: 'local' as const
+        });
+      }
+
+      // Save back to storage
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(storedCharacters));
+    } catch (e) {
+      console.error('Error saving to localStorage', e);
+    }
+  }
 
   /**
    * Delete a character (simulated)
@@ -603,18 +603,18 @@ private saveToLocalStorage(character: Character): void {
   /**
  * Clear the search filter and reset to initial state
  */
-clearSearchFilter(): void {
-  this.filterSignal.update(filter => ({
-    ...filter,
-    nameStartsWith: '',
-    offset: 0
-  }));
+  clearSearchFilter(): void {
+    this.filterSignal.update(filter => ({
+      ...filter,
+      nameStartsWith: '',
+      offset: 0
+    }));
 
-  // Force a reload to show all characters
-  this.loadCharacters();
-}
+    // Force a reload to show all characters
+    this.loadCharacters();
+  }
 
- // Método para buscar personagens com um termo de pesquisa
+  // Método para buscar personagens com um termo de pesquisa
   searchCharacters(term: string): void {
     // Por exemplo, usando o serviço da API com o termo de pesquisa
     this.marvelService.getCharacters(20, 0, term).subscribe(apiResponse => {

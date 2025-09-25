@@ -3,7 +3,7 @@ import { Character } from '../core/models/character.model';
 
 export function createMockCharacter(overrides: Partial<Character> = {}): Character {
   return {
-    id: 1,
+    id: 12345,
     name: 'Test Character',
     description: 'Test description',
     modified: new Date().toISOString(),

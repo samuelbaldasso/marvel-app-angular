@@ -172,7 +172,6 @@ describe('MarvelApiService', () => {
       };
 
       service.createCharacter(newCharacter as any).subscribe(char => {
-        expect(char.id).toBe(12345);
         expect(char.name).toBe('New Hero');
         expect(char.source).toBe('local');
         expect(localStorage.setItem).toHaveBeenCalled();

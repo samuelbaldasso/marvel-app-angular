@@ -52,7 +52,7 @@ export class CharacterDetailComponent implements OnInit {
     if (id === 'new') {
       // Handle "new" character case
       this.openCreateCharacterDialog();
-    } else if (id) {
+    }else if (id) {
       // Load existing character
       const characterId = parseInt(id, 10);
       if (!isNaN(characterId)) {

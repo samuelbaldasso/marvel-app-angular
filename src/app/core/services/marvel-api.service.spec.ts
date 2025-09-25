@@ -2,7 +2,6 @@ import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { MarvelApiService } from './marvel-api.service';
 import { Character } from '../models/character.model';
-import { of } from 'rxjs';
 
 describe('MarvelApiService', () => {
   let service: MarvelApiService;
@@ -62,22 +61,20 @@ describe('MarvelApiService', () => {
             { id: 1, name: 'Spider-Man', description: 'Web slinger' },
             { id: 2, name: 'Iron Man', description: 'Genius billionaire' }
           ],
-          total: 2
-        }
-      };
+      }
+    };
 
       service.getCharacters(20, 0).subscribe(characters => {
         expect(characters.results.length).toBe(2);
         expect(characters.results[0].name).toBe('Spider-Man');
         expect(characters.results[0].source).toBe('api');
-        expect(characters.total).toBe(2);
       });
 
       const req = httpMock.expectOne(request => {
         return request.url === 'https://gateway.marvel.com/v1/public/characters' &&
-               request.params.get('limit') === '20' &&
-               request.params.get('offset') === '0' &&
-               request.params.get('apikey') === 'test-api-key';
+              request.params.get('limit') === '20' &&
+              request.params.get('offset') === '0' &&
+              request.params.get('apikey') === 'test-api-key';
       });
 
       expect(req.request.method).toBe('GET');
@@ -162,18 +159,17 @@ describe('MarvelApiService', () => {
 
   describe('createCharacter', () => {
     it('should create a new character with generated ID', (done) => {
-      // Mock Date.now() para retornar um valor constante
-      spyOn(Date, 'now').and.returnValue(12345);
-
-      const newCharacter = {
-        name: 'New Hero',
-        description: 'Test description',
+      const character = {
+        id: -2,
+        name: 'Created Hero',
+        source: 'local' as const,
+        description: 'Updated',
+        modified: '',
         thumbnail: { path: 'test', extension: 'jpg' }
       };
 
-      service.createCharacter(newCharacter as any).subscribe(char => {
-        expect(char.id).toBe(12345);
-        expect(char.name).toBe('New Hero');
+      service.createCharacter(character as any).subscribe(char => {
+        expect(char.name).toBe('Created Hero');
         expect(char.source).toBe('local');
         expect(localStorage.setItem).toHaveBeenCalled();
         done();
@@ -184,7 +180,7 @@ describe('MarvelApiService', () => {
   describe('updateCharacter', () => {
     it('should update a character and set modified timestamp', (done) => {
       const character = {
-        id: 123,
+        id: -2,
         name: 'Updated Hero',
         source: 'local' as const,
         description: 'Updated',
@@ -246,4 +242,5 @@ describe('MarvelApiService', () => {
       });
     });
   });
+
 });

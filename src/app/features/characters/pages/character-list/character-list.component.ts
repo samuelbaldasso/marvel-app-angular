@@ -203,9 +203,7 @@ viewCharacterDetails(character: Character): void {
 
         // Add to state
         this.characterState.createCharacter(result);
-
-        // Save to local storage
-        this.saveToLocalStorage(result);
+        
         this.snackBar.open('Character created and saved locally!', 'Close', {
           duration: 3000
       });

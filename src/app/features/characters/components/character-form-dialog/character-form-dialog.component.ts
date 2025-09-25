@@ -51,6 +51,8 @@ export class CharacterFormDialogComponent implements OnInit {
         extension: [this.data.character?.thumbnail?.extension || 'jpg']
       })
     });
+
+
   }
 
   onCancel(): void {
@@ -61,21 +63,25 @@ export class CharacterFormDialogComponent implements OnInit {
   if (this.characterForm.valid) {
     const formValues = this.characterForm.value;
 
-    // Create character object to return
+    // Create a new object with the form values
     const characterData: any = {
-      ...this.data.character, // Preserve all existing properties
+      id: this.data.mode === 'edit' ? this.data.character!.id : undefined, // Always preserve the ID when it exists
       name: formValues.name,
       description: formValues.description,
       thumbnail: formValues.thumbnail,
-      // Add any other form fields
     };
 
-    // If editing, ensure ID is included
+    // If editing, ensure we preserve all necessary properties
     if (this.data.mode === 'edit' && this.data.character) {
-      characterData.id = this.data.character.id;
       characterData.modified = new Date().toISOString();
       // Preserve the source
       characterData.source = this.data.character.source;
+      // Preserve other important fields that weren't in the form
+      characterData.comics = this.data.character.comics;
+      characterData.series = this.data.character.series;
+      characterData.stories = this.data.character.stories;
+      characterData.events = this.data.character.events;
+      characterData.urls = this.data.character.urls;
     }
 
     // Add default properties for a new character
